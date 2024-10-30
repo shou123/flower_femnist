@@ -1,0 +1,19 @@
+random_seed: 42
+device: cpu
+dataset:
+  dataset: FeMNIST
+  dataset_fraction: 0.05
+  distribution_type: niid
+  batch_size: 10
+  train_fraction: 0.9
+  validation_fraction: 0.0
+  test_fraction: 0.1
+  num_classes: 62
+training:
+  num_rounds: 1000
+  num_clients_per_round: 5
+  learning_rate: 0.001
+  epochs_per_round: 5
+  batches_per_round: null
+  same_train_test_clients: false
+  results_dir_path: ./results/table2_flwr_baseline_partial_FeMNIST

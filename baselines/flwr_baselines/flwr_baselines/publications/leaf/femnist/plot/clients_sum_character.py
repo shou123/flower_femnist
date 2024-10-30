@@ -22,4 +22,4 @@ with open(file_path, "r") as file:
 
 # Print the total number of samples for each client
 for client_id, total_samples in client_sample_sums.items():
-    print(f"Client {client_id}: Total samples = {total_samples}")
+    print(f"Client {client_id}: proportion = {total_samples}")
