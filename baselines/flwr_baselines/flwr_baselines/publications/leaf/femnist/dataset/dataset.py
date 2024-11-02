@@ -25,6 +25,7 @@ from flwr_datasets import FederatedDataset
 from flwr_datasets.partitioner import DirichletPartitioner
 
 from collections import Counter
+import os
 
 class NISTLikeDataset(Dataset):
     """Dataset representing NIST or preprocessed variant of it."""
@@ -397,7 +398,7 @@ def dirichlet_partition_by_character(
     for character, indices in indices_by_character.items():
         num_items = len(indices)
         total_items += num_items
-        print(f"Character: {character}, Number of items: {num_items}")
+        # print(f"Character: {character}, Number of items: {num_items}")
 
         # Update min and max samples
         if num_items < min_samples:
@@ -407,9 +408,18 @@ def dirichlet_partition_by_character(
             max_samples = num_items
             max_character = character
         
-    print(f"Total number of items across all characters: {total_items}")
-    print(f"Minimum number of items for a character: {min_samples} (Character: {min_character})")
-    print(f"Maximum number of items for a character: {max_samples} (Character: {max_character})")
+    # print(f"Total number of items across all characters: {total_items}")
+    # print(f"Minimum number of items for a character: {min_samples} (Character: {min_character})")
+    # print(f"Maximum number of items for a character: {max_samples} (Character: {max_character})")
+    # Save the results to a file
+    output_dir = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot"
+    os.makedirs(output_dir, exist_ok=True)
+    output_file = os.path.join(output_dir, "min_max_item_per_class.txt")
+
+    with open(output_file, "w") as file:
+        file.write(f"Total number of items across all characters: {total_items}\n")
+        file.write(f"Minimum number of items for a character: {min_samples} (Character: {min_character})\n")
+        file.write(f"Maximum number of items for a character: {max_samples} (Character: {max_character})\n")
     
     # Create a list of empty lists for each client
     partition_indices = [[] for _ in range(n_clients)]
@@ -423,7 +433,8 @@ def dirichlet_partition_by_character(
             valid_proportions = False
             while not valid_proportions:
                 # Sample proportions for this client from a Dirichlet distribution
-                proportions = np.random.dirichlet([alpha] * len(unique_characters))
+                proportions = np.random.dirichlet(np.repeat(alpha, len(unique_characters)))
+                # proportions = np.random.dirichlet([alpha] * len(unique_characters))
                 
                 # Check if the proportions are valid
                 valid_proportions = True
