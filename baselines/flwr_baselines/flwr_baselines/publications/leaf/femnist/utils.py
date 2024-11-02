@@ -5,6 +5,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 import torch
 from flwr.common import Metrics, Scalar
+import os
 
 
 def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Dict[str, Scalar]:
@@ -34,6 +35,19 @@ def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Dict[str, Scalar]:
     weighted_metrics: Dict[str, Scalar] = {}
     for metric_name, metric_values in metrics_lists.items():
         weighted_metrics[metric_name] = sum(metric_values) / n_batches_sum
+
+    if 'accuracy' in weighted_metrics:
+        accuracy = weighted_metrics['accuracy']
+        print(f"Accuracy for this round: {accuracy:.18f}")
+
+        # Ensure the directory exists
+        output_dir = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot"
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Save the accuracy to the file
+        output_file = os.path.join(output_dir, "accuracy.txt")
+        with open(output_file, "a") as f:
+            f.write(f"{accuracy}\n")
 
     return weighted_metrics
 
