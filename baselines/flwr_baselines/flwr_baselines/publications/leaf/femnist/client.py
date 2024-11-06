@@ -119,6 +119,10 @@ def create_client(
     trainloader = trainloaders[int(cid)]
     valloader = valloaders[int(cid)]
     testloader = testloaders[int(cid)]
+    # print(f"num_epochs: {num_epochs}\n")
+    # print(f"num_classes: {num_classes}\n")
+    # print(f"num_batches: {num_batches}\n")
+    # print(f"net: {net}\n")
 
     return FlowerClient(
         net,
