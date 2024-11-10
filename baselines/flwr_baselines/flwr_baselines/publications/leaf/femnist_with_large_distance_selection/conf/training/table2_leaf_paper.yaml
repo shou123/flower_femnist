@@ -1,6 +1,6 @@
 # num_rounds: 2_0
-num_rounds: 300
-num_clients_per_round: 80
+num_rounds: 8
+num_clients_per_round: 10
 learning_rate: 0.01
 epochs_per_round: null
 batches_per_round: 32

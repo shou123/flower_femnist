@@ -11,12 +11,13 @@ import torch
 from flwr.server.strategy import FedAvg
 from omegaconf import DictConfig
 
-from flwr_baselines.publications.leaf.femnist.client import create_client
-from flwr_baselines.publications.leaf.femnist.dataset.dataset import (
+from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.client import create_client
+from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.dataset.dataset import (
     create_federated_dataloaders,
 )
-from flwr_baselines.publications.leaf.femnist.strategy import FedAvgSameClients
-from flwr_baselines.publications.leaf.femnist.utils import setup_seed, weighted_average
+from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.strategy import FedAvgSameClients
+from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.utils import setup_seed, weighted_average
+from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.selector import LargestDistanceActiveUserSelector
 
 
 # pylint: disable=too-many-locals
@@ -66,6 +67,8 @@ def main(cfg: DictConfig):
     else:
         flwr_strategy = FedAvg
 
+    # Initialize the client selection algorithm
+    client_selector = LargestDistanceActiveUserSelector()
 #========================Orignal code=============================================
     strategy = flwr_strategy(
         min_available_clients=total_n_clients,
@@ -80,6 +83,7 @@ def main(cfg: DictConfig):
         # evaluate_fn=None, #  Leave empty since it's responsible for the centralized evaluation
         fit_metrics_aggregation_fn=weighted_average,
         evaluate_metrics_aggregation_fn=weighted_average,
+        client_selection_fn=client_selector.get_user_indices,
     )
 
     client_resources = None

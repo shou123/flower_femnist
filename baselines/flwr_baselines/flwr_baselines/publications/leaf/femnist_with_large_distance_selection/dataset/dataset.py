@@ -13,11 +13,11 @@ from PIL import Image
 from sklearn import preprocessing
 from torch.utils.data import DataLoader, Dataset, Subset, random_split
 
-from flwr_baselines.publications.leaf.femnist.dataset.nist_preprocessor import (
+from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.dataset.nist_preprocessor import (
     NISTPreprocessor,
 )
-from flwr_baselines.publications.leaf.femnist.dataset.nist_sampler import NistSampler
-from flwr_baselines.publications.leaf.femnist.dataset.zip_downloader import (
+from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.dataset.nist_sampler import NistSampler
+from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.dataset.zip_downloader import (
     ZipDownloader,
 )
 
@@ -639,7 +639,7 @@ def create_federated_dataloaders(
         # partition_indices = dirichlet_partition(sampled_data_info, 10, 0.9, random_seed)
         #dirichlet distribution by class
         # partition_indices = dirichlet_partition_by_character_with_multi_clients( sampled_data_info, n_clients=10, alpha=0.9, random_seed=random_seed)
-        partition_indices = dirichlet_partition_by_character( sampled_data_info, n_clients=100, alpha=0.9, random_seed=random_seed)
+        partition_indices = dirichlet_partition_by_character( sampled_data_info, n_clients=10, alpha=0.9, random_seed=random_seed)
         # partition_indices = dirichlet_partition_by_character_with_even( sampled_data_info, n_clients=10, alpha=0.9, random_seed=random_seed)
         
     else:
