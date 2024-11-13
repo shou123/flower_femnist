@@ -27,7 +27,7 @@ from flwr_datasets.partitioner import DirichletPartitioner
 from collections import Counter
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+from omegaconf import DictConfig
 class NISTLikeDataset(Dataset):
     """Dataset representing NIST or preprocessed variant of it."""
 
@@ -284,7 +284,7 @@ def validate_proportion(character, proportion, samples_per_client, indices_by_ch
 
 
 def dirichlet_partition_by_character(
-    df_info: pd.DataFrame, n_clients: int, alpha: float, random_seed: int
+    df_info: pd.DataFrame, n_clients: int, alpha: float, random_seed: int,
 ) -> List[List[int]]:
     """
     Partition the dataset using a Dirichlet distribution by character class,
@@ -324,7 +324,7 @@ def dirichlet_partition_by_character(
     max_character = None
 
     # Prepare to save the results to a file
-    output_dir = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot"
+    output_dir = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_large_distance_selection/plot"
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, "min_max_item_per_class.txt")
 
@@ -356,7 +356,7 @@ def dirichlet_partition_by_character(
     # samples_per_client = total_items/n_clients
 
     # Open the file to save the proportions
-    with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot/proportions.txt", "w") as file:
+    with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_large_distance_selection/plot/proportions.txt", "w") as file:
         # Iterate through each client and assign samples using the Dirichlet distribution
         for client_id in range(n_clients):
             valid_proportions = False
@@ -419,7 +419,7 @@ def dirichlet_partition_by_character(
         client_distributions.append(f"Client {client_id}: {dict(char_counts)}")
 
     # Save the distribution information to the specified file
-    output_path = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot/dirichlet_distribution_by_character.txt"
+    output_path = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_large_distance_selection/plot/dirichlet_distribution_by_character.txt"
     with open(output_path, "w") as file:
         file.write("\n".join(client_distributions))
     
@@ -427,7 +427,7 @@ def dirichlet_partition_by_character(
 
 
 def dirichlet_partition_by_character_with_even(
-    df_info: pd.DataFrame, n_clients: int, alpha: float, random_seed: int
+    df_info: pd.DataFrame, n_clients: int, alpha: float, random_seed: int,
 ) -> List[List[int]]:
     """
     Partition the dataset using a Dirichlet distribution by character class,
@@ -467,7 +467,7 @@ def dirichlet_partition_by_character_with_even(
     max_character = None
 
     # Prepare to save the results to a file
-    output_dir = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot"
+    output_dir = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_large_distance_selection/plot"
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, "min_max_item_per_class.txt")
 
@@ -498,11 +498,10 @@ def dirichlet_partition_by_character_with_even(
     # Create a list of empty lists for each client
     partition_indices = [[] for _ in range(n_clients)]
     
-    # samples_per_client = 10000
-    samples_per_client = total_items/n_clients
+    samples_per_client = 10000
 
     # Open the file to save the proportions
-    with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot/proportions.txt", "w") as file:
+    with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_large_distance_selection/plot/proportions.txt", "w") as file:
         # Iterate through each client and assign samples using the Dirichlet distribution
         for client_id in range(n_clients):
             valid_proportions = False
@@ -552,7 +551,7 @@ def dirichlet_partition_by_character_with_even(
         client_distributions.append(f"Client {client_id}: {dict(char_counts)}")
 
     # Save the distribution information to the specified file
-    output_path = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot/dirichlet_distribution_by_character.txt"
+    output_path = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_large_distance_selection/plot/dirichlet_distribution_by_character.txt"
     with open(output_path, "w") as file:
         file.write("\n".join(client_distributions))
     

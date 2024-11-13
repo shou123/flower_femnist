@@ -41,7 +41,7 @@ def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Dict[str, Scalar]:
         print(f"Accuracy for this round: {accuracy:.18f}")
 
         # Ensure the directory exists
-        output_dir = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot"
+        output_dir = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_large_distance_selection/plot"
         os.makedirs(output_dir, exist_ok=True)
 
         # Save the accuracy to the file

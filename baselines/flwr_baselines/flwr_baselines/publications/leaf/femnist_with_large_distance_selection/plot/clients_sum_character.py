@@ -4,7 +4,7 @@ from collections import defaultdict
 client_sample_sums = defaultdict(float)
 
 # Define the path to the proportions.txt file
-file_path = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot/proportions.txt"
+file_path = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_large_distance_selection/plot/proportions.txt"
 
 # Read the proportions.txt file
 with open(file_path, "r") as file:

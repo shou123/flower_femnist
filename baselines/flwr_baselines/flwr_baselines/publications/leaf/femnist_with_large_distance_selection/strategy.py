@@ -16,6 +16,8 @@ from flwr.server.client_proxy import ClientProxy
 from flwr.server.strategy import FedAvg
 from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.selector import LargestDistanceActiveUserSelector
 
+from omegaconf import DictConfig
+
 
 class FedAvgSameClients(FedAvg):
     """FedAvg that samples clients for each round only once (the same clients
@@ -87,7 +89,7 @@ class FedAvgSameClients(FedAvg):
                     "epoch_num": server_round,
                 }
             )
-            print(f"Selected client IDs: {selected_client_ids}")
+            # print(f"Selected client IDs: {selected_client_ids}")
 
             # Ensure selected_client_ids is defined
             if selected_client_ids is None:
@@ -95,14 +97,14 @@ class FedAvgSameClients(FedAvg):
 
             # Get all clients
             all_clients = client_manager.all()
-            print(f"All clients: {all_clients}")
+            # print(f"All clients: {all_clients}")
 
             # Filter selected clients
             selected_clients = []
             for cid, client in all_clients.items():
                 if int(cid) in selected_client_ids:
                     selected_clients.append(client)
-            print(f"Selected clients: {selected_clients}")
+            # print(f"Selected clients: {selected_clients}")
 
             # Create the list of client/config pairs
             self._current_round_fit_clients_fits_list = []
@@ -130,7 +132,14 @@ class FedAvgSameClients(FedAvg):
         # Update client_local_model with the latest parameters
         for client_proxy, fit_res in results:
             client_id = int(client_proxy.cid)
-            self.client_local_model.append({client_id: fit_res.parameters})
+            found = False
+            for model in self.client_local_model:
+                if client_id in model:
+                    model[client_id] = fit_res.parameters
+                    found = True
+                    break
+            if not found:
+                self.client_local_model.append({client_id: fit_res.parameters})
 
         return aggregated_parameters, aggregated_metrics
 

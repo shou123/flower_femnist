@@ -1,5 +1,3 @@
-"""Main module for running FEMNIST experiments."""
-
 import pathlib
 from functools import partial
 from typing import Type, Union
@@ -18,7 +16,7 @@ from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.data
 from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.strategy import FedAvgSameClients
 from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.utils import setup_seed, weighted_average
 from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.selector import LargestDistanceActiveUserSelector
-
+import pdb
 
 # pylint: disable=too-many-locals
 @hydra.main(config_path="conf", version_base=None)
@@ -90,6 +88,7 @@ def main(cfg: DictConfig):
     if device.type == "cuda":
         client_resources = {"num_gpus": 1.0}
 
+    # pdb.set_trace()
     # Start simulation
     history = fl.simulation.start_simulation(
         client_fn=client_fnc,  # type: ignore
