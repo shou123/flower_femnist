@@ -7,7 +7,7 @@ import torch
 from flwr.common.typing import NDArrays, Scalar
 from torch.utils.data import DataLoader
 
-from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.model import Net, test, train
+from flwr_baselines.publications.leaf.femnist_with_loss_rate_selection.model import Net, test, train
 
 
 def get_parameters(net: torch.nn.Module) -> NDArrays:

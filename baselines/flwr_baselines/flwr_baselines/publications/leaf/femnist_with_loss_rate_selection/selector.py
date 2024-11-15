@@ -38,12 +38,12 @@ class LargestDistanceActiveUserSelector:
                     clients_distance.append((client_id, frobenius_norm))
 
             sorted_clients_distance = sorted(clients_distance, key=lambda x: x[1], reverse=True)
-            with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_large_distance_selection/plot/total_sorted_largest_client_distance.txt", 'a') as file:
+            with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_loss_rate_selection/plot/total_sorted_largest_client_distance.txt", 'a') as file:
                 for client, distance in sorted_clients_distance:
                     client_norm_info = "Global_round: {}, Client: {}, distance: {}\n".format(round_num, client, distance)
                     file.write(client_norm_info)
 
-            with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_large_distance_selection/plot/selected_sorted_largest_client_distance.txt", 'a') as file:
+            with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_loss_rate_selection/plot/selected_sorted_largest_client_distance.txt", 'a') as file:
                 for client, distance in sorted_clients_distance[0:total_elements]:
                     self._user_indices_overselected.append(client)
                
@@ -51,7 +51,7 @@ class LargestDistanceActiveUserSelector:
                     file.write(selected_client_info)
 
         print(f"client index: {self._user_indices_overselected}")
-        with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_large_distance_selection/plot/selected_clients.txt", "a") as file:
+        with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_loss_rate_selection/plot/selected_clients.txt", "a") as file:
                 file.write(f"{self._user_indices_overselected}\n")
 
         return self._user_indices_overselected

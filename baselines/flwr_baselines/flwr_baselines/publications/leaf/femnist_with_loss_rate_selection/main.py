@@ -9,13 +9,13 @@ import torch
 from flwr.server.strategy import FedAvg
 from omegaconf import DictConfig
 
-from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.client import create_client
-from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.dataset.dataset import (
+from flwr_baselines.publications.leaf.femnist_with_loss_rate_selection.client import create_client
+from flwr_baselines.publications.leaf.femnist_with_loss_rate_selection.dataset.dataset import (
     create_federated_dataloaders,
 )
-from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.strategy import FedAvgSameClients
-from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.utils import setup_seed, weighted_average
-from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.selector import LargestDistanceActiveUserSelector
+from flwr_baselines.publications.leaf.femnist_with_loss_rate_selection.strategy import FedAvgSameClients
+from flwr_baselines.publications.leaf.femnist_with_loss_rate_selection.utils import setup_seed, weighted_average
+from flwr_baselines.publications.leaf.femnist_with_loss_rate_selection.selector import LargestDistanceActiveUserSelector
 import pdb
 
 # pylint: disable=too-many-locals

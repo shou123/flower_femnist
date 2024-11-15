@@ -14,7 +14,7 @@ from flwr.common import (
 from flwr.server import ClientManager
 from flwr.server.client_proxy import ClientProxy
 from flwr.server.strategy import FedAvg
-from flwr_baselines.publications.leaf.femnist_with_large_distance_selection.selector import LargestDistanceActiveUserSelector
+from flwr_baselines.publications.leaf.femnist_with_loss_rate_selection.selector import LargestDistanceActiveUserSelector
 
 from omegaconf import DictConfig
 
