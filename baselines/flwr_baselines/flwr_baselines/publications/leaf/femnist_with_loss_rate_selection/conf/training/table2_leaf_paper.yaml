@@ -1,5 +1,5 @@
 # num_rounds: 2_0
-num_rounds: 3
+num_rounds: 100
 num_clients_per_round: 10
 learning_rate: 0.01
 epochs_per_round: null

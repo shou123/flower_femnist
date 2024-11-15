@@ -1,0 +1,13 @@
+dataset: FeMNIST
+dataset_fraction: 0.5
+distribution_type: "niid"
+batch_size: 10
+train_fraction: 0.6
+validation_fraction: 0.2
+test_fraction: 0.2
+num_classes: 62
+
+#for largest distance selection
+samples_per_client: 10000
+total_client: 10
+alpha: 0.9

@@ -36,8 +36,8 @@ def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Dict[str, Scalar]:
     for metric_name, metric_values in metrics_lists.items():
         weighted_metrics[metric_name] = sum(metric_values) / n_batches_sum
 
-    if 'val_accuracy' in weighted_metrics:
-        accuracy = weighted_metrics['val_accuracy']
+    if 'accuracy' in weighted_metrics:
+        accuracy = weighted_metrics['accuracy']
         print(f"Accuracy for this round: {accuracy:.18f}")
 
         # Ensure the directory exists
@@ -48,19 +48,6 @@ def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Dict[str, Scalar]:
         output_file = os.path.join(output_dir, "accuracy.txt")
         with open(output_file, "a") as f:
             f.write(f"{accuracy}\n")
-    
-    if 'train_loss' in weighted_metrics:
-        loss = weighted_metrics['train_loss']
-        print(f"loss for this round: {loss:.18f}")
-
-            # Ensure the directory exists
-        path = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist_with_large_distance_selection/plot"
-        os.makedirs(path, exist_ok=True)
-
-        # Save the accuracy to the file
-        output_file = os.path.join(path, "loss.txt")
-        with open(output_file, "a") as f:
-            f.write(f"{loss}\n")
 
     return weighted_metrics
 
