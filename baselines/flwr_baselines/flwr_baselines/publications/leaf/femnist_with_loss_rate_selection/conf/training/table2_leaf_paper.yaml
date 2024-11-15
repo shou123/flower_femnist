@@ -1,0 +1,9 @@
+# num_rounds: 2_0
+num_rounds: 3
+num_clients_per_round: 10
+learning_rate: 0.01
+epochs_per_round: null
+batches_per_round: 32
+same_train_test_clients: True
+
+results_dir_path: "./results/table2_leaf_paper_partial_FeMNIST"
