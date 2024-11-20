@@ -117,26 +117,26 @@ def partition_dataset(
     return subsets
 
 
-def partition_dataset(
-    dataset: Dataset, partition_indices: List[List[int]]
-) -> List[Dataset]:
-    """
-    Partition dataset according to provided indices for each client.
+# def partition_dataset(
+#     dataset: Dataset, partition_indices: List[List[int]]
+# ) -> List[Dataset]:
+#     """
+#     Partition dataset according to provided indices for each client.
     
-    Parameters
-    ----------
-    dataset: Dataset
-        Full dataset to partition.
-    partition_indices: List[List[int]]
-        List of indices for each client partition.
+#     Parameters
+#     ----------
+#     dataset: Dataset
+#         Full dataset to partition.
+#     partition_indices: List[List[int]]
+#         List of indices for each client partition.
 
-    Returns
-    -------
-    subsets: List[Dataset]
-        Subsets of datasets partitioned by client.
-    """
-    subsets = [Subset(dataset, indices) for indices in partition_indices]
-    return subsets
+#     Returns
+#     -------
+#     subsets: List[Dataset]
+#         Subsets of datasets partitioned by client.
+#     """
+#     subsets = [Subset(dataset, indices) for indices in partition_indices]
+#     return subsets
 
 
 
@@ -639,8 +639,8 @@ def create_federated_dataloaders(
         # partition_indices = dirichlet_partition(sampled_data_info, 10, 0.9, random_seed)
         #dirichlet distribution by class
         # partition_indices = dirichlet_partition_by_character_with_multi_clients( sampled_data_info, n_clients=10, alpha=0.9, random_seed=random_seed)
-        partition_indices = dirichlet_partition_by_character( sampled_data_info, n_clients=10, alpha=0.9, random_seed=random_seed)
-        # partition_indices = dirichlet_partition_by_character_with_even( sampled_data_info, n_clients=10, alpha=0.9, random_seed=random_seed)
+        # partition_indices = dirichlet_partition_by_character( sampled_data_info, n_clients=100, alpha=0.9, random_seed=random_seed)
+        partition_indices = dirichlet_partition_by_character_with_even( sampled_data_info, n_clients=10, alpha=0.9, random_seed=random_seed)
         
     else:
         raise ValueError("Only 'niid' sampling is supported with Dirichlet partitioning.")
