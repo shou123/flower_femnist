@@ -36,8 +36,12 @@ def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Dict[str, Scalar]:
     for metric_name, metric_values in metrics_lists.items():
         weighted_metrics[metric_name] = sum(metric_values) / n_batches_sum
 
-    if 'val_accuracy' in weighted_metrics:
-        accuracy = weighted_metrics['val_accuracy']
+    # if 'val_accuracy' in weighted_metrics:
+    #     accuracy = weighted_metrics['val_accuracy']
+    #     print(f"Accuracy for this round: {accuracy:.18f}")
+
+    if 'accuracy' in weighted_metrics:
+        accuracy = weighted_metrics['accuracy']
         print(f"Accuracy for this round: {accuracy:.18f}")
 
         # Ensure the directory exists
