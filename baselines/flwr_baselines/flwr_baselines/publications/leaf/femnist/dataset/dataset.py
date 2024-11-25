@@ -558,6 +558,219 @@ def dirichlet_partition_by_character_with_even(
     
     return partition_indices
 
+def dirichlet_partition_by_character_with_overlap(
+    df_info: pd.DataFrame, n_clients: int, alpha: float, random_seed: int
+) -> List[List[int]]:
+    """
+    Partition the dataset using a Dirichlet distribution by character class,
+    ensuring each client has samples from all character classes.
+
+    Parameters
+    ----------
+    df_info: pd.DataFrame
+        DataFrame containing character information.
+    n_clients: int
+        Number of clients.
+    alpha: float
+        Dirichlet distribution parameter. Lower values make partitions more uneven.
+    random_seed: int
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    partition_indices: List[List[int]]
+        List of lists where each inner list contains indices for one client's partition.
+    """
+    np.random.seed(random_seed)
+    characters = df_info["character"].values
+    unique_characters = np.unique(characters)
+    
+    # Group indices of samples by character
+    indices_by_character = {
+        character: np.where(characters == character)[0].tolist()
+        for character in unique_characters
+    }
+
+    # Calculate and print the number of samples for each character and the total
+    total_items = 0
+    min_samples = float('inf')
+    max_samples = float('-inf')
+    min_character = None
+    max_character = None
+
+    # Prepare to save the results to a file
+    output_dir = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot"
+    os.makedirs(output_dir, exist_ok=True)
+    output_file = os.path.join(output_dir, "min_max_item_per_class.txt")
+
+    with open(output_file, "w") as file:
+        for character, indices in indices_by_character.items():
+            num_items = len(indices)
+            total_items += num_items
+            print(f"Character: {character}, Number of items: {num_items}")
+            file.write(f"Character: {character}, Number of items: {num_items}\n")
+
+            # Update min and max samples
+            if num_items < min_samples:
+                min_samples = num_items
+                min_character = character
+            if num_items > max_samples:
+                max_samples = num_items
+                max_character = character
+        
+
+
+        file.write(f"Total number of items across all characters: {total_items}\n")
+        file.write(f"Minimum number of items for a character: {min_samples} (Character: {min_character})\n")
+        file.write(f"Maximum number of items for a character: {max_samples} (Character: {max_character})\n")
+    
+    # Create a list of empty lists for each client
+    partition_indices = [[] for _ in range(n_clients)]
+    
+    samples_per_client = 10000
+    # samples_per_client = total_items/n_clients
+
+    # Open the file to save the proportions
+    with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot/proportions.txt", "w") as file:
+        # Iterate through each client and assign samples using the Dirichlet distribution
+        for client_id in range(n_clients):
+            valid_proportions = False
+            max_iterations = 10000  # Set a maximum number of iterations to avoid dead loop
+            iteration_count = 0
+            
+            while not valid_proportions and iteration_count < max_iterations:
+                iteration_count += 1
+                
+                # Sample proportions for this client from a Dirichlet distribution
+                proportions = np.random.dirichlet(np.repeat(alpha, len(unique_characters)))
+                # proportions = np.random.dirichlet([alpha] * len(unique_characters))
+                
+                # Check if the proportions are valid using multi-threading
+                valid_proportions = True
+                with ThreadPoolExecutor(max_workers=128) as executor:  # Specify the number of threads
+                    futures = [
+                        executor.submit(validate_proportion, character, proportions[i], samples_per_client, indices_by_character)
+                        for i, character in enumerate(unique_characters)
+                    ]
+                    for future in as_completed(futures):
+                        if not future.result():
+                            valid_proportions = False
+                            break
+                
+                # If proportions are not valid, resample
+                if not valid_proportions:
+                    continue
+            
+            if not valid_proportions:
+                raise RuntimeError(f"Failed to find valid proportions for client {client_id} after {max_iterations} iterations")
+            
+            
+            # Print and save the proportions for each unique character
+            for char, proportion in zip(unique_characters, proportions):
+                print(f"Client {client_id}, Character {char}: {proportion}")
+                file.write(f"Client {client_id}, Character {char}: {proportion}\n")
+            
+            # Iterate through each character to distribute samples according to the proportions
+            for i, character in enumerate(unique_characters):
+                character_indices = indices_by_character[character]
+                
+                # Shuffle the character's indices to randomize the order
+                np.random.shuffle(character_indices)
+                
+                # Calculate the number of samples to assign to this client for this character
+                num_samples = int(proportions[i] * samples_per_client)
+                
+                # Assign the calculated number of samples to this client
+                partition_indices[client_id].extend(character_indices[:num_samples])
+                
+                # Update the indices list for the remaining clients
+                # indices_by_character[character] = character_indices[num_samples:]
+    
+    # Calculate and save the data distribution for each client
+    client_distributions = []
+    for client_id, indices in enumerate(partition_indices):
+        client_chars = df_info.iloc[indices]["character"].values
+        char_counts = Counter(client_chars)
+        client_distributions.append(f"Client {client_id}: {dict(char_counts)}")
+
+    # Save the distribution information to the specified file
+    output_path = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot/dirichlet_distribution_by_character.txt"
+    with open(output_path, "w") as file:
+        file.write("\n".join(client_distributions))
+
+    partition_indices = apply_overlap(partition_indices, df_info, overlap_percent=0.1)
+    
+    return partition_indices
+
+
+def apply_overlap(partition_indices, df_info, overlap_percent):
+    """
+    Apply overlap logic to the partitioned indices for clients 0 and 1.
+
+    Parameters
+    ----------
+    partition_indices: List[List[int]]
+        List of lists where each inner list contains indices for one client's partition.
+    df_info: pd.DataFrame
+        DataFrame containing character information.
+    overlap_percent: float
+        Percentage of overlap between clients 0 and 1.
+
+    Returns
+    -------
+    partition_indices: List[List[int]]
+        Modified partition indices with overlap applied.
+    """
+    all_labels = np.array(df_info["character"])
+    num_samples_0 = len(partition_indices[0])
+    num_samples_1 = len(partition_indices[1])
+    num_samples_to_copy_0 = int(num_samples_0 * overlap_percent)
+    num_samples_to_copy_1 = int(num_samples_1 * overlap_percent)
+
+    num_samples_per_contributing_client_0 = num_samples_to_copy_0 // (len(partition_indices) - 2)
+    num_samples_per_contributing_client_1 = num_samples_to_copy_1 // (len(partition_indices) - 2)
+
+    copied_indices_0 = set()
+    copied_indices_1 = set()
+
+    # Use fixed seed for overlap
+    overlap_seed = 55
+    rng_overlap = np.random.default_rng(overlap_seed)
+
+    # Overlap sample selection
+    for client_id in range(2, len(partition_indices)):
+        available_indices = list(set(partition_indices[client_id]) - copied_indices_0 - copied_indices_1)
+        rng_overlap.shuffle(available_indices)
+
+        selected_indices_0 = set(available_indices[:num_samples_per_contributing_client_0])
+        selected_indices_1 = set(available_indices[num_samples_per_contributing_client_0:num_samples_per_contributing_client_0 + num_samples_per_contributing_client_1])
+
+        copied_indices_0.update(selected_indices_0)
+        copied_indices_1.update(selected_indices_1)
+
+        print(f"Client {client_id} contributes {len(selected_indices_0)} samples to Client 0 and {len(selected_indices_1)} samples to Client 1.")
+
+    copied_indices_0 = list(copied_indices_0)
+    copied_indices_1 = list(copied_indices_1)
+    
+    rng_overlap.shuffle(copied_indices_0)
+    rng_overlap.shuffle(copied_indices_1)
+
+    partition_indices[0][:num_samples_to_copy_0] = copied_indices_0
+    partition_indices[1][:num_samples_to_copy_1] = copied_indices_1
+
+    overlap_percent_0 = (len(copied_indices_0) / num_samples_0) * 100
+    overlap_percent_1 = (len(copied_indices_1) / num_samples_1) * 100
+    print(f"Client 0 has {len(copied_indices_0)} overlapping samples, which is {overlap_percent_0:.2f}% of their total samples.")
+    print(f"Client 1 has {len(copied_indices_1)} overlapping samples, which is {overlap_percent_1:.2f}% of their total samples.")
+
+    return partition_indices
+
+def update_class_count(class_count, indices, all_labels):
+    for idx in indices:
+        class_count[all_labels[idx]] += 1
+    return class_count
+
 # pylint: disable=too-many-arguments
 def create_federated_dataloaders(
     sampling_type: str,
@@ -637,11 +850,11 @@ def create_federated_dataloaders(
     if sampling_type == "niid":
         # #dirichlet distribution by writer
         # partition_indices = dirichlet_partition(sampled_data_info, 10, 0.9, random_seed)
+
         #dirichlet distribution by class
-        # partition_indices = dirichlet_partition_by_character_with_multi_clients( sampled_data_info, n_clients=10, alpha=0.9, random_seed=random_seed)
-        partition_indices = dirichlet_partition_by_character( sampled_data_info, n_clients=100, alpha=0.1, random_seed=random_seed)
+        # partition_indices = dirichlet_partition_by_character( sampled_data_info, n_clients=100, alpha=0.1, random_seed=random_seed)
         # partition_indices = dirichlet_partition_by_character_with_even( sampled_data_info, n_clients=100, alpha=0.9, random_seed=random_seed)
-        
+        partition_indices = dirichlet_partition_by_character_with_overlap( sampled_data_info, n_clients=10, alpha=0.1, random_seed=random_seed)
     else:
         raise ValueError("Only 'niid' sampling is supported with Dirichlet partitioning.")
     partitioned_dataset = partition_dataset(full_dataset, partition_indices)
