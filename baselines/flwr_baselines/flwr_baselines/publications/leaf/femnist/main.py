@@ -15,7 +15,7 @@ from flwr_baselines.publications.leaf.femnist.client import create_client
 from flwr_baselines.publications.leaf.femnist.dataset.dataset import (
     create_federated_dataloaders,
 )
-from flwr_baselines.publications.leaf.femnist.strategy import FedAvgSameClients
+from flwr_baselines.publications.leaf.femnist.strategy import FedAvgSameClients, include_or_exclude_clients_random
 from flwr_baselines.publications.leaf.femnist.utils import setup_seed, weighted_average
 
 
@@ -60,14 +60,9 @@ def main(cfg: DictConfig):
 
 
     flwr_strategy: Union[Type[FedAvg], Type[FedAvgSameClients]]
-    if cfg.training.same_train_test_clients:
-        #  Assign reference to a class
-        flwr_strategy = FedAvgSameClients
-    else:
-        flwr_strategy = FedAvg
-
-#========================Orignal code=============================================
-    strategy = flwr_strategy(
+    if cfg.training.same_train_test_clients == True and cfg.training.selector == 'random':#  Assign reference to a class
+        flwr_strategy = FedAvgSameClients  
+        strategy = flwr_strategy(
         min_available_clients=total_n_clients,
         # min number of clients to sample from for fit and evaluate
         # Keep fraction fit low (not zero for consistency reasons with fraction_evaluate)
@@ -81,6 +76,61 @@ def main(cfg: DictConfig):
         fit_metrics_aggregation_fn=weighted_average,
         evaluate_metrics_aggregation_fn=weighted_average,
     )
+    elif cfg.training.same_train_test_clients == True and cfg.training.selector == 'random_select_include':
+        flwr_strategy = include_or_exclude_clients_random
+        strategy = flwr_strategy(
+        # fraction_fit=1.0,
+        # fraction_evaluate=1.0,
+        # min_fit_clients=2,
+        # min_evaluate_clients=2,
+        # min_available_clients=2,
+        # include_clients_0_and_1=True,  # Pass the parameter here
+        # evaluate_fn=None,
+        # on_fit_config_fn=None,
+        # on_evaluate_config_fn=None,
+        # accept_failures=True,
+        # initial_parameters=None,
+        # fit_metrics_aggregation_fn=None,
+        # evaluate_metrics_aggregation_fn=None,
+        fraction_fit=0.001,
+        min_fit_clients=cfg.training.num_clients_per_round,
+        fraction_evaluate=0.001,
+        min_evaluate_clients=cfg.training.num_clients_per_round,
+        # evaluate_fn=None, #  Leave empty since it's responsible for the centralized evaluation
+        fit_metrics_aggregation_fn=weighted_average,
+        evaluate_metrics_aggregation_fn=weighted_average,
+        include_clients_0_and_1=True
+    )
+    elif cfg.training.same_train_test_clients == True and cfg.training.selector == 'random_select_exclude':
+        flwr_strategy = include_or_exclude_clients_random
+        strategy = flwr_strategy(
+        # fraction_fit=1.0,
+        # fraction_evaluate=1.0,
+        # min_fit_clients=2,
+        # min_evaluate_clients=2,
+        # min_available_clients=2,
+        # include_clients_0_and_1=False,  # Pass the parameter here
+        # evaluate_fn=None,
+        # on_fit_config_fn=None,
+        # on_evaluate_config_fn=None,
+        # accept_failures=True,
+        # initial_parameters=None,
+        # fit_metrics_aggregation_fn=None,
+        # evaluate_metrics_aggregation_fn=None,
+        fraction_fit=0.001,
+        min_fit_clients=cfg.training.num_clients_per_round,
+        fraction_evaluate=0.001,
+        min_evaluate_clients=cfg.training.num_clients_per_round,
+        # evaluate_fn=None, #  Leave empty since it's responsible for the centralized evaluation
+        fit_metrics_aggregation_fn=weighted_average,
+        evaluate_metrics_aggregation_fn=weighted_average,
+        include_clients_0_and_1=False
+    )
+    else:
+        flwr_strategy = FedAvg
+
+#========================Orignal code=============================================
+
 
     client_resources = None
     if device.type == "cuda":

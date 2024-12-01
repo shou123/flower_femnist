@@ -664,7 +664,6 @@ def dirichlet_partition_by_character_with_overlap(
             if not valid_proportions:
                 raise RuntimeError(f"Failed to find valid proportions for client {client_id} after {max_iterations} iterations")
             
-            
             # Print and save the proportions for each unique character
             for char, proportion in zip(unique_characters, proportions):
                 print(f"Client {client_id}, Character {char}: {proportion}")
@@ -698,7 +697,7 @@ def dirichlet_partition_by_character_with_overlap(
     with open(output_path, "w") as file:
         file.write("\n".join(client_distributions))
 
-    partition_indices = apply_overlap(partition_indices, df_info, overlap_percent=0.1,overlap_clients=3)
+    partition_indices = apply_overlap(partition_indices, df_info, overlap_percent=0.1,overlap_clients=2)
     
     return partition_indices
 
@@ -749,103 +748,47 @@ def apply_overlap(partition_indices, df_info, overlap_percent, overlap_clients=0
             available_indices = list(
                 set(partition_indices[client_id]) - set.union(*copied_indices.values())
             )
-            rng_overlap.shuffle(available_indices)
+            if client_id == 2:
+                with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot/total_client_indices.txt", "w") as file:
+                    file.write(f"available_indices: {available_indices}\n")
 
             # Distribute indices to overlap clients
             for i, client in enumerate(overlap_client_ids):
                 num_samples_per_contributing_client = num_samples_to_copy[i] // (
                     len(partition_indices) - len(overlap_client_ids)
                 )
+
+                # Ensure there are enough available indices
+                assert len(available_indices) >= num_samples_per_contributing_client, \
+                    f"Not enough available indices for client {client_id} to contribute to client {client}"
+                
                 selected_indices = set(
                     available_indices[:num_samples_per_contributing_client]
-                )
+                ) #got the first num_samples_per_contributing_client from available_indices
                 copied_indices[client].update(selected_indices)
                 available_indices = available_indices[
                     num_samples_per_contributing_client:
                 ]
+                # print(f"Client {client_id} contribute Overlap_Client: {client}\n Selected_Samples: {selected_indices}\n Available: {available_indices}")
 
-                print(
-                    f"Client {client_id} contributes {len(selected_indices)} samples to Client {client}."
-                )
+                with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot/overlap_client_verify.txt", "a") as file:
+                    file.write(f"Client {client_id} contribute Overlap_Client: {client}\n Selected_Samples: {selected_indices}\n Available: {available_indices}\n")
+                print(f"Client {client_id} contributes {len(selected_indices)} samples to Client {client}")
+                # Save final indices for each client after overlap
 
     # Shuffle and assign copied indices back to overlap clients
     for client in overlap_client_ids:
         copied_indices_list = list(copied_indices[client])
-        rng_overlap.shuffle(copied_indices_list)
+        # rng_overlap.shuffle(copied_indices_list)
         partition_indices[client][: len(copied_indices_list)] = copied_indices_list
 
         overlap_percent_actual = (
             len(copied_indices_list) / len(partition_indices[client]) * 100
         )
-        print(
-            f"Client {client} has {len(copied_indices_list)} overlapping samples, which is {overlap_percent_actual:.2f}% of their total samples."
-        )
+        print(f"Client {client} has {len(copied_indices_list)} overlapping samples, which is {overlap_percent_actual:.2f}% of their total samples.")
 
     return partition_indices
 
-# example
-# def apply_overlap(partition_indices, df_info, overlap_percent):
-#     """
-#     Apply overlap logic to the partitioned indices for clients 0 and 1.
-
-#     Parameters
-#     ----------
-#     partition_indices: List[List[int]]
-#         List of lists where each inner list contains indices for one client's partition.
-#     df_info: pd.DataFrame
-#         DataFrame containing character information.
-#     overlap_percent: float
-#         Percentage of overlap between clients 0 and 1.
-
-#     Returns
-#     -------
-#     partition_indices: List[List[int]]
-#         Modified partition indices with overlap applied.
-#     """
-#     all_labels = np.array(df_info["character"])
-#     num_samples_0 = len(partition_indices[0])
-#     num_samples_1 = len(partition_indices[1])
-#     num_samples_to_copy_0 = int(num_samples_0 * overlap_percent)
-#     num_samples_to_copy_1 = int(num_samples_1 * overlap_percent)
-
-#     num_samples_per_contributing_client_0 = num_samples_to_copy_0 // (len(partition_indices) - 2)
-#     num_samples_per_contributing_client_1 = num_samples_to_copy_1 // (len(partition_indices) - 2)
-
-#     copied_indices_0 = set()
-#     copied_indices_1 = set()
-
-#     # Use fixed seed for overlap
-#     overlap_seed = 55
-#     rng_overlap = np.random.default_rng(overlap_seed)
-
-#     # Overlap sample selection
-#     for client_id in range(2, len(partition_indices)):
-#         available_indices = list(set(partition_indices[client_id]) - copied_indices_0 - copied_indices_1)
-#         rng_overlap.shuffle(available_indices)
-
-#         selected_indices_0 = set(available_indices[:num_samples_per_contributing_client_0])
-#         selected_indices_1 = set(available_indices[num_samples_per_contributing_client_0:num_samples_per_contributing_client_0 + num_samples_per_contributing_client_1])
-
-#         copied_indices_0.update(selected_indices_0)
-#         copied_indices_1.update(selected_indices_1)
-
-#         print(f"Client {client_id} contributes {len(selected_indices_0)} samples to Client 0 and {len(selected_indices_1)} samples to Client 1.")
-
-#     copied_indices_0 = list(copied_indices_0)
-#     copied_indices_1 = list(copied_indices_1)
-    
-#     rng_overlap.shuffle(copied_indices_0)
-#     rng_overlap.shuffle(copied_indices_1)
-
-#     partition_indices[0][:num_samples_to_copy_0] = copied_indices_0
-#     partition_indices[1][:num_samples_to_copy_1] = copied_indices_1
-
-#     overlap_percent_0 = (len(copied_indices_0) / num_samples_0) * 100
-#     overlap_percent_1 = (len(copied_indices_1) / num_samples_1) * 100
-#     print(f"Client 0 has {len(copied_indices_0)} overlapping samples, which is {overlap_percent_0:.2f}% of their total samples.")
-#     print(f"Client 1 has {len(copied_indices_1)} overlapping samples, which is {overlap_percent_1:.2f}% of their total samples.")
-
-#     return partition_indices
 
 def update_class_count(class_count, indices, all_labels):
     for idx in indices:
