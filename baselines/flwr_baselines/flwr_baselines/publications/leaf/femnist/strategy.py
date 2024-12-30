@@ -80,6 +80,20 @@ class FedAvgSameClients(FedAvg):
         self._current_round_fit_clients_fits_list = super().configure_fit(
             server_round, parameters, client_manager
         )
+
+    # Extract the selected client IDs
+        selected_client_ids = [client.cid for client, _ in self._current_round_fit_clients_fits_list]
+        
+        # Print the round number and selected client IDs in the required format
+        print(f"{server_round}: {selected_client_ids}")
+
+        # Format the output
+        output_line = f"{server_round}: {selected_client_ids}\n"
+
+        with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot/client_selection.txt", "a") as file:  # Open in append mode to keep adding rounds
+            file.write(output_line)
+    
+
         # Return client/config pairs
         return self._current_round_fit_clients_fits_list
 
@@ -112,6 +126,7 @@ class include_or_exclude_clients_random(FedAvg):
         min_evaluate_clients: int = 2,
         min_available_clients: int = 2,
         include_clients_0_and_1: bool = True,
+        num_inclusive_exclusive_clients: float = 2.0,
         evaluate_fn: Optional[
             Callable[
                 [int, NDArrays, Dict[str, Scalar]],
@@ -139,6 +154,7 @@ class include_or_exclude_clients_random(FedAvg):
         self.min_evaluate_clients = min_evaluate_clients
         self.min_available_clients = min_available_clients
         self.include_clients_0_and_1 = include_clients_0_and_1
+        self.num_inclusive_exclusive_clients = num_inclusive_exclusive_clients
         self.evaluate_fn = evaluate_fn
         self.on_fit_config_fn = on_fit_config_fn
         self.on_evaluate_config_fn = on_evaluate_config_fn
@@ -187,23 +203,41 @@ class include_or_exclude_clients_random(FedAvg):
         self, server_round: int, parameters: Parameters, client_manager: ClientManager
     ) -> List[Tuple[ClientProxy, FitIns]]:
         """Configure the next round of training."""
+        
+        # Initialize an empty configuration dictionary
         config = {}
         if self.on_fit_config_fn is not None:
             # Custom fit config function provided
             config = self.on_fit_config_fn(server_round)
         fit_ins = FitIns(parameters, config)
 
+        # Get a list of all clients managed by the client_manager
         all_clients = list(client_manager.all().values())
         selected_client_proxies = []
         
-        if self.include_clients_0_and_1:
-            selected_client_proxies.extend(
-                [client_manager.clients.get(cid) for cid in ["0", "1"] if cid in client_manager.clients]
-            )
-            remaining_clients = [client for client in all_clients if client.cid not in ["0", "1"]]
-        else:
-            remaining_clients = [client for client in all_clients if client.cid not in ["0", "1"]]
+        # If the flag is set to include clients "0" and "1" by default, add them to the selected list
+        # if self.include_clients_0_and_1:
+        #     # Add clients with IDs "0" and "1" to selected list
+        #     selected_client_proxies.extend(
+        #         [client_manager.clients.get(cid) for cid in ["0", "1"] if cid in client_manager.clients]
+        #     )
+        #     remaining_clients = [client for client in all_clients if client.cid not in ["0", "1"]]
+        # else:
+        #     remaining_clients = [client for client in all_clients if client.cid not in ["0", "1"]]
 
+        # num_clients_to_select = int(self.min_fit_clients) - len(selected_client_proxies)
+        # selected_client_proxies.extend(random.sample(remaining_clients, num_clients_to_select))
+        inclusive_client_ids = [str(i) for i in range(self.num_inclusive_exclusive_clients)]
+        if self.include_clients_0_and_1:
+            # Generate the list of client IDs to include based on the parameter
+            # Add clients with the generated IDs to the selected list
+            selected_client_proxies.extend(
+                [client_manager.clients.get(cid) for cid in inclusive_client_ids if cid in client_manager.clients]
+            )
+            remaining_clients = [client for client in all_clients if client.cid not in inclusive_client_ids]
+        else:
+            remaining_clients = [client for client in all_clients if client.cid not in inclusive_client_ids]
+        
         num_clients_to_select = int(self.min_fit_clients) - len(selected_client_proxies)
         selected_client_proxies.extend(random.sample(remaining_clients, num_clients_to_select))
 
@@ -215,6 +249,10 @@ class include_or_exclude_clients_random(FedAvg):
         # Print the selected clients for the next round
         selected_client_ids = [client.cid for client in selected_client_proxies if client is not None]
         print(f"Selected clients for round {server_round}: {selected_client_ids}")
+
+        # Save the selected clients for the next round to the specified file
+        with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot/client_selection.txt", "a") as file:
+            file.write(f"{server_round}: {selected_client_ids}\n")
 
         return [(client, fit_ins) for client in selected_client_proxies if client is not None]
 

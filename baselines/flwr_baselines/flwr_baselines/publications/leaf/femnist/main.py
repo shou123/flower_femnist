@@ -99,7 +99,8 @@ def main(cfg: DictConfig):
         # evaluate_fn=None, #  Leave empty since it's responsible for the centralized evaluation
         fit_metrics_aggregation_fn=weighted_average,
         evaluate_metrics_aggregation_fn=weighted_average,
-        include_clients_0_and_1=True
+        include_clients_0_and_1=True,
+        num_inclusive_exclusive_clients = cfg.training.num_inclusive_exclusive_clients
     )
     elif cfg.training.same_train_test_clients == True and cfg.training.selector == 'random_select_exclude':
         flwr_strategy = include_or_exclude_clients_random
@@ -124,7 +125,8 @@ def main(cfg: DictConfig):
         # evaluate_fn=None, #  Leave empty since it's responsible for the centralized evaluation
         fit_metrics_aggregation_fn=weighted_average,
         evaluate_metrics_aggregation_fn=weighted_average,
-        include_clients_0_and_1=False
+        include_clients_0_and_1=False,
+        num_inclusive_exclusive_clients = cfg.training.num_inclusive_exclusive_clients
     )
     else:
         flwr_strategy = FedAvg
