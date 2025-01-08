@@ -27,6 +27,7 @@ from flwr_datasets.partitioner import DirichletPartitioner
 from collections import Counter
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import random
 
 class NISTLikeDataset(Dataset):
     """Dataset representing NIST or preprocessed variant of it."""
@@ -697,12 +698,12 @@ def dirichlet_partition_by_character_with_overlap(
     with open(output_path, "w") as file:
         file.write("\n".join(client_distributions))
 
-    partition_indices = apply_overlap(partition_indices, df_info, overlap_percent=0.1,overlap_clients=2)
+    partition_indices = apply_overlap(partition_indices, overlap_percent=0.5,overlap_clients=20)
     
     return partition_indices
 
 
-def apply_overlap(partition_indices, df_info, overlap_percent, overlap_clients=0):
+def apply_overlap(partition_indices, overlap_percent, overlap_clients=0):
     """
     Apply dynamic overlap logic to the partitioned indices for a specified number of clients.
 
@@ -748,9 +749,6 @@ def apply_overlap(partition_indices, df_info, overlap_percent, overlap_clients=0
             available_indices = list(
                 set(partition_indices[client_id]) - set.union(*copied_indices.values())
             )
-            if client_id == 2:
-                with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot/total_client_indices.txt", "w") as file:
-                    file.write(f"available_indices: {available_indices}\n")
 
             # Distribute indices to overlap clients
             for i, client in enumerate(overlap_client_ids):
@@ -771,10 +769,12 @@ def apply_overlap(partition_indices, df_info, overlap_percent, overlap_clients=0
                 ]
                 # print(f"Client {client_id} contribute Overlap_Client: {client}\n Selected_Samples: {selected_indices}\n Available: {available_indices}")
 
+                # Print details for verification
+
                 with open("baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot/overlap_client_verify.txt", "a") as file:
-                    file.write(f"Client {client_id} contribute Overlap_Client: {client}\n Selected_Samples: {selected_indices}\n Available: {available_indices}\n")
-                print(f"Client {client_id} contributes {len(selected_indices)} samples to Client {client}")
-                # Save final indices for each client after overlap
+                    file.write(f"Client {client_id} contributes {len(selected_indices)} samples to Client {client}\n")
+                    file.write(f"Selected indices: {selected_indices}\n")
+                    file.write(f"Remaining available indices for Client {client_id}: {available_indices}\n")
 
     # Shuffle and assign copied indices back to overlap clients
     for client in overlap_client_ids:
@@ -788,7 +788,6 @@ def apply_overlap(partition_indices, df_info, overlap_percent, overlap_clients=0
         print(f"Client {client} has {len(copied_indices_list)} overlapping samples, which is {overlap_percent_actual:.2f}% of their total samples.")
 
     return partition_indices
-
 
 def update_class_count(class_count, indices, all_labels):
     for idx in indices:
@@ -876,9 +875,9 @@ def create_federated_dataloaders(
         # partition_indices = dirichlet_partition(sampled_data_info, 10, 0.9, random_seed)
 
         #dirichlet distribution by class
-        # partition_indices = dirichlet_partition_by_character( sampled_data_info, n_clients=100, alpha=0.1, random_seed=random_seed)
+        # partition_indices = dirichlet_partition_by_character( sampled_data_info, n_clients=100, alpha=0.9, random_seed=random_seed)
         # partition_indices = dirichlet_partition_by_character_with_even( sampled_data_info, n_clients=100, alpha=0.9, random_seed=random_seed)
-        partition_indices = dirichlet_partition_by_character_with_overlap( sampled_data_info, n_clients=10, alpha=0.1, random_seed=random_seed)
+        partition_indices = dirichlet_partition_by_character_with_overlap( sampled_data_info, n_clients=100, alpha=0.9, random_seed=random_seed)
     else:
         raise ValueError("Only 'niid' sampling is supported with Dirichlet partitioning.")
     partitioned_dataset = partition_dataset(full_dataset, partition_indices)

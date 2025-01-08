@@ -5,7 +5,7 @@ epochs_per_round: null
 batches_per_round: 32
 same_train_test_clients: True
 
-selector: random
+selector: random_select_include_with_overlap_probability
 num_inclusive_exclusive_clients: 20
 
 results_dir_path: "./results/table2_leaf_paper_partial_FeMNIST"
