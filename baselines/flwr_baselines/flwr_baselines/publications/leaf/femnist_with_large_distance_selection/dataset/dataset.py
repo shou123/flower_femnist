@@ -328,7 +328,7 @@ def dirichlet_partition_by_character(
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, "min_max_item_per_class.txt")
 
-    with open(output_file, "w") as file:
+    with open(output_file, "a") as file:
         for character, indices in indices_by_character.items():
             num_items = len(indices)
             total_items += num_items
@@ -471,7 +471,7 @@ def dirichlet_partition_by_character_with_even(
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, "min_max_item_per_class.txt")
 
-    with open(output_file, "w") as file:
+    with open(output_file, "a") as file:
         for character, indices in indices_by_character.items():
             num_items = len(indices)
             total_items += num_items
@@ -639,7 +639,7 @@ def create_federated_dataloaders(
         #dirichlet distribution by class
         # partition_indices = dirichlet_partition_by_character_with_multi_clients( sampled_data_info, n_clients=10, alpha=0.9, random_seed=random_seed)
         partition_indices = dirichlet_partition_by_character( sampled_data_info, n_clients=100, alpha=0.1, random_seed=random_seed)
-        # partition_indices = dirichlet_partition_by_character_with_even( sampled_data_info, n_clients=100, alpha=0.9, random_seed=random_seed)
+        # partition_indices = dirichlet_partition_by_character_with_even( sampled_data_info, n_clients=100, alpha=0.1, random_seed=random_seed)
         
     else:
         raise ValueError("Only 'niid' sampling is supported with Dirichlet partitioning.")

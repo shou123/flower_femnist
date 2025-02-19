@@ -275,6 +275,22 @@ def dirichlet_partition(
             end_idx = start_idx + client_sample_counts[client_id]
             partition_indices[client_id].extend(writer_indices[start_idx:end_idx])
             start_idx = end_idx
+
+    # Prepare to save the results to a file
+    output_dir = "baselines/flwr_baselines/flwr_baselines/publications/leaf/femnist/plot"
+    os.makedirs(output_dir, exist_ok=True)
+    output_file = os.path.join(output_dir, "data_distribution_by_client.txt")
+
+    # Print each client's character distribution and number of samples
+    with open(output_file, "w") as file:
+        for client_id, client_indices in enumerate(partition_indices):
+            client_characters = df_info.iloc[client_indices]["character"].fillna('0').values
+            character_counts = pd.Series(client_characters).value_counts()
+            sorted_counts = character_counts.sort_index(key=lambda x: [ord(c) for c in x])
+            sorted_counts_str = ", ".join([f"({char}: {count})" for char, count in sorted_counts.items()])
+            file.write(f"Client {client_id}:\n")
+            file.write(f"{sorted_counts_str}\n")
+            file.write(f"Number of samples: {len(client_indices)}\n\n")
     
     return partition_indices
 
@@ -329,7 +345,7 @@ def dirichlet_partition_by_character(
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, "min_max_item_per_class.txt")
 
-    with open(output_file, "w") as file:
+    with open(output_file, "a") as file:
         for character, indices in indices_by_character.items():
             num_items = len(indices)
             total_items += num_items
@@ -472,7 +488,7 @@ def dirichlet_partition_by_character_with_even(
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, "min_max_item_per_class.txt")
 
-    with open(output_file, "w") as file:
+    with open(output_file, "a") as file:
         for character, indices in indices_by_character.items():
             num_items = len(indices)
             total_items += num_items
@@ -604,7 +620,7 @@ def dirichlet_partition_by_character_with_overlap(
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, "min_max_item_per_class.txt")
 
-    with open(output_file, "w") as file:
+    with open(output_file, "a") as file:
         for character, indices in indices_by_character.items():
             num_items = len(indices)
             total_items += num_items
@@ -698,7 +714,7 @@ def dirichlet_partition_by_character_with_overlap(
     with open(output_path, "w") as file:
         file.write("\n".join(client_distributions))
 
-    partition_indices = apply_overlap(partition_indices, overlap_percent=0.5,overlap_clients=20)
+    partition_indices = apply_overlap(partition_indices, overlap_percent=0.25,overlap_clients=20)
     
     return partition_indices
 
@@ -866,18 +882,21 @@ def create_federated_dataloaders(
     label_encoder = preprocessing.LabelEncoder()
     labels = label_encoder.fit_transform(sampled_data_info["character"])
 
-    full_dataset = create_dataset(sampled_data_info, labels)
 #==============================================================================================================
+    # full_dataset = create_dataset(sampled_data_info, labels)
     # division_list = create_partition_list(sampled_data_info)
-
+    # partitioned_dataset = partition_dataset(full_dataset, division_list)
+#==============================================================================================================
+    
+    full_dataset = create_dataset(sampled_data_info, labels)
     if sampling_type == "niid":
-        # #dirichlet distribution by writer
-        # partition_indices = dirichlet_partition(sampled_data_info, 10, 0.9, random_seed)
+        # #dirichlet distribution by client
+        partition_indices = dirichlet_partition(sampled_data_info, n_clients=10, alpha=0.9, random_seed=random_seed)
 
         #dirichlet distribution by class
         # partition_indices = dirichlet_partition_by_character( sampled_data_info, n_clients=100, alpha=0.9, random_seed=random_seed)
         # partition_indices = dirichlet_partition_by_character_with_even( sampled_data_info, n_clients=100, alpha=0.9, random_seed=random_seed)
-        partition_indices = dirichlet_partition_by_character_with_overlap( sampled_data_info, n_clients=100, alpha=0.9, random_seed=random_seed)
+        # partition_indices = dirichlet_partition_by_character_with_overlap( sampled_data_info, n_clients=100, alpha=0.9, random_seed=random_seed)
     else:
         raise ValueError("Only 'niid' sampling is supported with Dirichlet partitioning.")
     partitioned_dataset = partition_dataset(full_dataset, partition_indices)
