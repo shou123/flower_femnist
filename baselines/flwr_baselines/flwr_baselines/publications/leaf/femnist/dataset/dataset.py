@@ -891,7 +891,7 @@ def create_federated_dataloaders(
     full_dataset = create_dataset(sampled_data_info, labels)
     if sampling_type == "niid":
         # #dirichlet distribution by client
-        partition_indices = dirichlet_partition(sampled_data_info, n_clients=10, alpha=0.9, random_seed=random_seed)
+        partition_indices = dirichlet_partition(sampled_data_info, n_clients=100, alpha=0.1, random_seed=random_seed)
 
         #dirichlet distribution by class
         # partition_indices = dirichlet_partition_by_character( sampled_data_info, n_clients=100, alpha=0.9, random_seed=random_seed)

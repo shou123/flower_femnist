@@ -77,7 +77,7 @@ class FedAvgSameClients(FedAvg):
                 {
                     "num_total_users": len(client_manager.all()),
                     "users_per_round": self.min_fit_clients,
-                    "select_percentage": 0.8,
+                    "select_percentage": 0.1,
                     "client_local_model": self.client_local_model,
                     "global_model": parameters,
                     "epoch_num": server_round,

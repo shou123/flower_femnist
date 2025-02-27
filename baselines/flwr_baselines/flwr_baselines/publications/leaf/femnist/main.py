@@ -57,9 +57,8 @@ def main(cfg: DictConfig):
         num_classes=cfg.dataset.num_classes,
         num_batches=cfg.training.batches_per_round,  # Ensure client_id is passed
     )
-
-
     flwr_strategy: Union[Type[FedAvg], Type[FedAvgSameClients]]
+
     if cfg.training.same_train_test_clients == True and cfg.training.selector == 'random':#  Assign reference to a class
         flwr_strategy = FedAvgSameClients  
         strategy = flwr_strategy(
@@ -114,7 +113,7 @@ def main(cfg: DictConfig):
         evaluate_metrics_aggregation_fn=weighted_average,
         include_clients_0_and_1=True,
         num_inclusive_exclusive_clients = cfg.training.num_inclusive_exclusive_clients,
-        overlap_probability = 0.7
+        overlap_probability = 0.8
     )
     else:
         flwr_strategy = FedAvg
