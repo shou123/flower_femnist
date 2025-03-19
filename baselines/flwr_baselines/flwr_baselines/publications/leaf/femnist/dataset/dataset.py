@@ -967,7 +967,7 @@ def create_federated_dataloaders(
     if sampling_type == "niid":
         # #dirichlet distribution by client
         # partition_indices = dirichlet_partition_by_client(sampled_data_info, n_clients=100, alpha=0.1, random_seed=random_seed)
-        partition_indices = dirichlet_partition_by_client_with_overlap(sampled_data_info, n_clients=100, alpha=0.1, random_seed=random_seed, overlap_percent=0.25,overlap_clients=20)
+        partition_indices = dirichlet_partition_by_client_with_overlap(sampled_data_info, n_clients=100, alpha=0.1, random_seed=random_seed, overlap_percent=0.7,overlap_clients=6)
 
         #dirichlet distribution by class
         # partition_indices = dirichlet_partition_by_character( sampled_data_info, n_clients=100, alpha=0.9, random_seed=random_seed, samples_per_client = 10000)

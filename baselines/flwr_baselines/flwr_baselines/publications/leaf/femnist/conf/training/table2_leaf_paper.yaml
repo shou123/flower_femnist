@@ -1,11 +1,11 @@
 num_rounds: 200
-num_clients_per_round: 60
+num_clients_per_round: 20
 learning_rate: 0.01
-epochs_per_round: null
+epochs_per_round: 5
 batches_per_round: 32
 same_train_test_clients: True
 
-selector: random_select_include_with_overlap_probability
-num_inclusive_exclusive_clients: 20
+selector: random_select_exclude
+num_inclusive_exclusive_clients: 6
 
 results_dir_path: "./results/table2_leaf_paper_partial_FeMNIST"
